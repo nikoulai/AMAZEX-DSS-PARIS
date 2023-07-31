@@ -4,7 +4,6 @@ In the ever-evolving world of decentralized finance, an ambitious developer took
 
 However, we've encountered a challenge. Hidden within the code, a potential vulnerability threatens the security of the funds locked within the contract. This situation calls for the dedication and expertise of blockchain security auditors. Are you ready to step up, solve this issue, and play a crucial role in preserving the sanctity of the Ethereum ecosystem? This is the test of our resolve and adaptability, something I've seen in this community time and again.
 
-
 📌 Starting with **10 ETH**, recover `1000 ETH` from the `ModernWETH` contract.
 
 📌 Recover all `ETH` to avoid further losses from `ModernWETH` contract. Whitehat hacker should end up with **1010 ETH**.
@@ -17,12 +16,14 @@ However, we've encountered a challenge. Hidden within the code, a potential vuln
     </ul>
 </details>
 
--------------
+---
+
 **The contracts that you will hack are**:
 
 - **[`ModernWETH.sol`](./ModernWETH.sol)**
 
 **The test script where you will have to write your solution is**:
+
 - **[`Challenge2.t.sol`](../../test/Challenge2.t.sol)**
 
--------------
+---

