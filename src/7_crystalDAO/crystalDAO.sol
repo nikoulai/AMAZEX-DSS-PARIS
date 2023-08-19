@@ -107,6 +107,9 @@ contract DaoVaultImplementation is Initializable, EIP712Upgradeable {
 
         // Recover signer from signature
         address signer = ecrecover(hash, v, r, s);
+        //@audit it doesn't check for valid signature, just that it's the owner
+        // should check if it is the zero address
+        //todo should check at somepoint what went wrong with the initialization
 
         require(owner == signer, "Only owner can execute!");
         require(!usedSigs[hash], "Signature has already been used!");

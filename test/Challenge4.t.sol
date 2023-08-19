@@ -12,7 +12,6 @@ import {PosiCoin} from "../src/4_RescuePosi/PosiCoin.sol";
 ////////////////////////////////////////////////////////////*/
 
 
-
 /*////////////////////////////////////////////////////////////
 //                     TEST CONTRACT                        //
 ////////////////////////////////////////////////////////////*/
@@ -36,6 +35,17 @@ contract Challenge4Test is Test {
         POSI.transfer(unclaimedAddress, 1000 ether);
     }
 
+    function deploy(bytes memory code, uint256 salt) public returns (address addr) {
+        assembly {
+            addr := create2(     // Deploys a contract using create2.
+                0,               // wei sent with current call
+                add(code, 0x20), // Pointer to code, with skip the assembly prefix
+                mload(code),     // Length of code
+                salt             // The salt used
+            )
+            if iszero(extcodesize(addr)) { revert(0, 0) } // Check if contract deployed correctly, otherwise revert.
+        }
+    }
 
     function testWhitehatRescue() public {
         vm.deal(whitehat, 10 ether);
@@ -47,6 +57,24 @@ contract Challenge4Test is Test {
         // forge test --match-contract Challenge4Test -vvvv //
         ////////////////////////////////////////////////////*/
 
+        // bytes memory walletBytecode = type(VaultWalletTemplate).creationCode;
+        // bytes memory factoryBytecode = type(VaultFactory).creationCode;
+        // console.logBytes(walletBytecode);
+
+        // return abi.encodePacked(bytecode, abi.encode(_owner, _foo));
+        // address factoryAddress = FACTORY.deploy(factoryBytecode, 11); 
+        // console.logAddress(factoryAddress);
+
+        // console.logAddress(address(FACTORY));
+        // address walletAddress = FACTORY.deploy(walletBytecode, 11); 
+        // console.logAddress(walletAddress);
+
+        // bytes32 hash = keccak256(
+        //     abi.encodePacked(0, address(this), _salt, keccak256(bytecode))
+        // );
+
+        // NOTE: cast last 20 bytes of hash to address
+        // return address(uint160(uint(hash)));
 
 
 

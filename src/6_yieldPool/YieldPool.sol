@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IERC20, ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC3156FlashLender, IERC3156FlashBorrower} from "@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol";
+import "forge-std/console.sol";
 
 /**
  * @title SecureumToken
@@ -19,7 +20,7 @@ contract SecureumToken is ERC20("Secureum Token", "ST") {
 contract YieldPool is ERC20("Safe Yield Pool", "syLP"), IERC3156FlashLender {
     // The token address
     IERC20 public immutable TOKEN;
-    // An arbitrary address to represent Ether 
+    // An arbitrary address to represent Ether
     address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     // A constant to indicate a successful callback, according to ERC3156
     bytes32 private constant CALLBACK_SUCCESS = keccak256("ERC3156FlashBorrower.onFlashLoan");
@@ -45,9 +46,9 @@ contract YieldPool is ERC20("Safe Yield Pool", "syLP"), IERC3156FlashLender {
     }
 
     /**
-    * @notice The fee is 1%
-    * @inheritdoc IERC3156FlashLender
-    */
+     * @notice The fee is 1%
+     * @inheritdoc IERC3156FlashLender
+     */
     function flashFee(address, uint256 amount) public pure returns (uint256) {
         return amount / 100;
     }
@@ -77,10 +78,10 @@ contract YieldPool is ERC20("Safe Yield Pool", "syLP"), IERC3156FlashLender {
             "Invalid callback return value"
         );
 
+        console.log("expected", expected);
         if (token == ETH) {
             require(address(this).balance >= expected, "Flash loan not repayed");
-        }
-        else {
+        } else {
             require(getReserve() >= expected, "Flash loan not repayed");
         }
         return true;
@@ -108,17 +109,24 @@ contract YieldPool is ERC20("Safe Yield Pool", "syLP"), IERC3156FlashLender {
 
         if (tokenReserve == 0) {
             TOKEN.transferFrom(msg.sender, address(this), _amount);
-
+            /* @audit - liquidity minting is only affected by ethBalance, and not at all from _amount
+             * `transferFrom` returns `bool`, it should be checked
+             * could _amount be zero and still mint liquidity? How is this exploitable?
+             */
+            console.log("totalsupply", totalSupply());
             liquidity = ethBalance;
             _mint(msg.sender, liquidity);
+            console.log("totalsupply", totalSupply());
         } else {
+            console.log("22222");
             uint256 ethReserve = ethBalance - msg.value;
 
             uint256 tokenAmount = (msg.value * tokenReserve) / (ethReserve);
             require(_amount >= tokenAmount, "Amount of tokens sent is less than the minimum tokens required");
 
+            // @audit - again, the return `bool` is not being checked
             TOKEN.transferFrom(msg.sender, address(this), tokenAmount);
-
+            // @audit here they use totalSupply() instead of tokenReserve
             liquidity = (totalSupply() * msg.value) / ethReserve;
             _mint(msg.sender, liquidity);
         }
@@ -167,7 +175,9 @@ contract YieldPool is ERC20("Safe Yield Pool", "syLP"), IERC3156FlashLender {
      */
     function ethToToken() public payable {
         uint256 tokenReserve = getReserve();
+        console.log("tokenReserve: %s", tokenReserve);
         uint256 tokensBought = getAmountOfTokens(msg.value, address(this).balance - msg.value, tokenReserve);
+        console.log("tokensBought: %s", tokensBought);
 
         TOKEN.transfer(msg.sender, tokensBought);
     }
@@ -178,11 +188,13 @@ contract YieldPool is ERC20("Safe Yield Pool", "syLP"), IERC3156FlashLender {
      */
     function tokenToEth(uint256 _tokensSold) public {
         uint256 tokenReserve = getReserve();
+        console.log(_tokensSold, tokenReserve, address(this).balance);
         uint256 ethBought = getAmountOfTokens(_tokensSold, tokenReserve, address(this).balance);
         TOKEN.transferFrom(msg.sender, address(this), _tokensSold);
         payable(msg.sender).transfer(ethBought);
     }
 
-
-    receive() external payable {}
+    receive() external payable {
+        console.log("received money");
+    }
 }
